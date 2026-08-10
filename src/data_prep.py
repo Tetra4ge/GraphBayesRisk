@@ -10,9 +10,15 @@ def load_data(filepath):
     df.rename(columns={'default payment next month': 'Y'}, inplace=True)
     if 'ID' in df.columns:
         df.drop(columns=['ID'], inplace=True)
+    
+    # Coerce any non-numeric values to NaN
+    df = df.apply(pd.to_numeric, errors='coerce')
     return df
 
 def clean_data(df):
+    # Drop rows with NaN values (e.g. the single row with '-' in EDUCATION)
+    df = df.dropna()
+    
     # Drop duplicates
     df = df.drop_duplicates().copy()
     
@@ -21,6 +27,12 @@ def clean_data(df):
     for col in pay_amt_cols:
         if col in df.columns:
             df[col] = df[col].clip(lower=0)
+            
+    # Ensure types are integer where appropriate (especially target Y, SEX, EDUCATION, MARRIAGE, AGE, PAY_*)
+    int_cols = ['Y', 'SEX', 'EDUCATION', 'MARRIAGE', 'AGE'] + [f'PAY_{i}' for i in [0, 2, 3, 4, 5, 6]]
+    for col in int_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(int)
             
     return df
 
