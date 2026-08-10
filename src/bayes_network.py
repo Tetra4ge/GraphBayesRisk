@@ -92,8 +92,11 @@ def extract_latent_features(model, df, split_name):
                 query_res = inference.query(variables=[target], evidence=evidence, show_progress=False)
                 probs = [query_res.values[query_res.name_to_no[target][val]] for val in target_states[name]]
             except Exception as e:
-                cpd = model.get_cpds(target)
-                probs = list(cpd.values)
+                try:
+                    prior_res = inference.query(variables=[target], show_progress=False)
+                    probs = [prior_res.values[prior_res.name_to_no[target][val]] for val in target_states[name]]
+                except Exception as ex:
+                    probs = [1.0 / len(target_states[name])] * len(target_states[name])
             
             for state_idx, p in enumerate(probs):
                 sample_latent[f"z_{name}_{state_idx}"] = p
